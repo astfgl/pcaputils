@@ -61,6 +61,7 @@ static cfgopt_t cfg[] = {
 	{ 'u', "owner",         CONFIG_STR, {}, "root",  "output file owning user" },
 	{ 'g', "group",         CONFIG_STR, {}, "root",  "output file owning group" },
 	{ 'm', "mode",          CONFIG_OCT, {}, "0600",  "output file mode" },
+	{ 'l', "localtime",     CONFIG_BOOL,{}, "0",     "output file name in local time"},
 	{ 't', "interval",      CONFIG_DEC, {}, "86400", "output file rotation interval" },
 	{ 'T', "duration",	CONFIG_DEC, {}, NULL,    "capture duration in seconds" },
 	{ 'c', "count",         CONFIG_DEC, {}, NULL,    "packet count limit" },
@@ -78,6 +79,7 @@ static pcap_args_t pa;
 static bool check_interval = false;
 static bool headers_only = false;
 static bool reload_config = false;
+static bool pcapdump_localtime = false;
 static bool stop_running = false;
 static char *pcapdump_filefmt;
 static int pcapdump_interval;
@@ -179,6 +181,7 @@ static void load_config(void){
 
 	pa.promisc = cfgopt_get_bool(cfg, "promisc");
 	pa.snaplen = cfgopt_get_num(cfg, "snaplen");
+	pcapdump_localtime = cfgopt_get_bool(cfg, "localtime");
 	pcapdump_interval = cfgopt_get_num(cfg, "interval");
 	pcapdump_packetlimit = cfgopt_get_num(cfg, "count");
 	pcapdump_duration = cfgopt_get_num(cfg, "duration");
@@ -192,6 +195,7 @@ static bool has_config_changed(void){
 	}
 
 	if(
+		cfgopt_get_num(cfg, "localtime")  != pcapdump_localtime ||
 		cfgopt_get_num(cfg, "interval") != pcapdump_interval ||
 		cfgopt_get_num(cfg, "duration") != pcapdump_duration ||
 		cfgopt_get_bool(cfg, "promisc")  != pa.promisc ||
@@ -303,7 +307,11 @@ static void reset_dump(void){
 
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
-	struct tm *the_time = gmtime(&tv.tv_sec);
+	struct tm *the_time;
+	if (pcapdump_localtime)
+		the_time = localtime(&tv.tv_sec);
+	else
+		the_time = gmtime(&tv.tv_sec);
 	strftime(fname, FNAME_MAXLEN, pcapdump_filefmt, the_time);
 
 	update_and_print_stats();
