@@ -59,6 +59,13 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>-l </option><replaceable>localtime</replaceable></term>
+        <listitem>
+          <para>Use system's local time for timestamps.</para>
+        </listitem>
+      </varlistentry>
+      
+      <varlistentry>
         <term><option>-t </option><replaceable>secs</replaceable></term>
         <listitem>
           <para>Dump file rotation interval in seconds.</para>
